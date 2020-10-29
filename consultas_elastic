@@ -1,0 +1,106 @@
+ELASTIC_SEARCH:
+
+1. Se debe crear la base de datos desde el REST
+
+PUT /accidentes
+
+2. Se debe crear el mapeo de forma estática ya que necesitamos especificar compos geograficos.
+
+  * Para mapeo ver archivo: mapping_elastic
+
+3. Una vez que se tiene el mapeo se puedo hacer la ingesta de los datos desde el archivo US_Accidents_Dec19.csv, y teniendo en cuenta de no agregar campos nulos.
+
+Finalmente ya es posible hacer todas las siguientes consultas:
+
+1) GET /accidentes/_search
+{
+    "query" : {
+        "constant_score" : {
+            "filter" : {
+                "range" : {
+                    "Start_Time" : {
+                        "gte" :  "2020-01-01 00:00:00",
+                        "lte"  : "2020-12-24 00:00:00"
+                    }
+                }
+            }
+        }
+    }
+}
+
+2) GET /accidentes/_search 
+{
+  "size": 0,
+  "aggs": {
+    "Weather_Condition_group": {
+      "terms": {
+        "field": "Weather_Condition.keyword"
+      }
+    }
+  }
+}
+
+3)  GET accidentes/_search
+{
+  "query": {
+    "bool": {
+      "must": {
+        "match_all": {}
+      },
+      "filter": {
+        "geo_distance": {
+          "distance": "200km",
+          "start_location": {
+            "lat": 47.11178,
+            "lon": -120.96671
+          }
+        }
+      }
+    }
+  }
+}
+
+
+4)  GET accidentes/_search
+{
+  "sort": [
+    {
+      "Severity.keyword": {
+        "order": "desc"
+      }
+    }
+  ],
+  "size": 5,
+  "query": {
+    "bool": {
+      "must": {
+        "match_all": {}
+      },
+      "filter": {
+        "geo_distance": {
+          "distance": "10km",
+          "start_location": {
+            "lat": 47.11178,
+            "lon": -120.96671
+          }
+        }
+      }
+    }
+  }
+}
+
+
+5)  GET accidentes/_search
+
+{
+  "size": 0,
+  "aggs": {
+    "promedio_distance": {
+      "avg": {
+        "field": "Distance(mi)"
+      }
+    }
+  }
+}
+
+
